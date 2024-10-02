@@ -14,6 +14,11 @@ namespace Host.Sql
             DATABASE_NAME = databaseName;
         }
 
+        internal string GenerateConnectionString()
+        {
+            return $"Server={SQL_SERVER_NAME};Database={DATABASE_NAME};Integrated Security=True;TrustServerCertificate=True";
+        }
+
         internal void EnsureDatabaseExists()
         {
             var connectionString = $"Data Source={SQL_SERVER_NAME};Initial Catalog=master;Integrated Security=True;TrustServerCertificate=True";
@@ -34,9 +39,7 @@ namespace Host.Sql
 
         internal void EnsureTableExists(string tableName)
         {
-            var connectionString = $"Server={SQL_SERVER_NAME};Database={DATABASE_NAME};Integrated Security=True;TrustServerCertificate=True";
-
-            using (IDbConnection connection = new SqlConnection(connectionString))
+            using (IDbConnection connection = new SqlConnection(GenerateConnectionString()))
             {
                 using (IDbCommand command = connection.CreateCommand())
                 {
