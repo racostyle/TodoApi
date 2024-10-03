@@ -21,6 +21,15 @@
                 )";
         }
 
+        internal static string GenerateTestingObject(string tableName)
+        {
+            return @$"
+                    INSERT INTO {tableName} (DueDate, Creator, Description, Alert, Extra1, Extra2, Extra3, Extra4, Extra5)
+                    VALUES ('{DateTime.UtcNow.AddDays(7):yyyy-MM-dd HH:mm:ss}', 'TestUser', 'This is a test todo item.', 0, 
+                    'Test Extra 1', 'Test Extra 2', 'Test Extra 3', 'Test Extra 4', 'Test Extra 5');
+                 ";
+        }
+
         internal static string EnsureDbExists(string databaseName)
         {
             return $@"

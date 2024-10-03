@@ -1,6 +1,7 @@
 
 using Host.Auxiliary;
-using Host.Sql;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Host
 {
@@ -8,6 +9,7 @@ namespace Host
     {
         public static void Main(string[] args)
         {
+            var port = GetAvailablePort();
             var config = new ConfigurationHelper();
 
             var builder = WebApplication.CreateBuilder(args);
@@ -15,12 +17,26 @@ namespace Host
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(port);
+            });
+
             var app = builder.Build();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
             app.Run();
+        }
+
+        private static int GetAvailablePort()
+        {
+            TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
         }
     }
 }

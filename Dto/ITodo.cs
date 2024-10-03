@@ -1,4 +1,6 @@
-﻿namespace Host.Dtos
+﻿using System;
+
+namespace Dto
 {
     public interface ITodo
     {

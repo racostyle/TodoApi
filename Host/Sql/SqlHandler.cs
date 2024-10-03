@@ -37,14 +37,14 @@ namespace Host.Sql
             }
         }
 
-        internal void EnsureTableExists(string tableName)
+        internal void EnsureTableExists(string tableName, bool test)
         {
             using (IDbConnection connection = new SqlConnection(GenerateConnectionString()))
             {
+                connection.Open();
                 using (IDbCommand command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{tableName}'";
-                    connection.Open();
                     var tableExists = (int)command.ExecuteScalar();
 
                     if (tableExists == 0)
@@ -55,6 +55,14 @@ namespace Host.Sql
                             createTableCommand.CommandText = CommandsGen.CreateTodoTableCommand(tableName);
                             createTableCommand.ExecuteNonQuery();
                         }
+                    }
+                }
+                if (test)
+                {
+                    using (IDbCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = CommandsGen.GenerateTestingObject(tableName);
+                        command.ExecuteNonQuery();
                     }
                 }
             }

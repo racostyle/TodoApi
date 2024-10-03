@@ -1,7 +1,10 @@
-﻿namespace Host.Dtos
+﻿using System;
+
+namespace Dto
 {
     public class TodoDto : ITodo
     {
+        public int Id { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime DueDate { get; set; }
         public string Description { get; set; }

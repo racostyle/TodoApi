@@ -1,8 +1,9 @@
-﻿using Host.Auxiliary;
-using Host.Dtos;
+﻿using Dto;
+using Host.Auxiliary;
 using Host.Sql;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using System.Data;
 using System.Reflection;
 
 namespace Host.Controllers
@@ -13,6 +14,9 @@ namespace Host.Controllers
     {
         private readonly IConfigurationHelper _config;
         private readonly SqlHandler _handler;
+        private readonly string CONNECTION_STRING;
+
+        private const string TABLE_NAME = "Todos";
 
         public TodoController(IConfigurationHelper config)
         {
@@ -20,7 +24,52 @@ namespace Host.Controllers
 
             _handler = new SqlHandler(_config.GetSqlServerName, "TodoApi");
             _handler.EnsureDatabaseExists();
-            _handler.EnsureTableExists("Todos");
+            _handler.EnsureTableExists(TABLE_NAME, true);
+            CONNECTION_STRING = _handler.GenerateConnectionString();
+        }
+
+        [HttpGet]
+        public ActionResult<IEnumerable<ITodo>> Get()
+        {
+            var products = new List<ITodo>();
+
+            using (IDbConnection connection = new SqlConnection(CONNECTION_STRING))
+            {
+                string query = $"SELECT * FROM {TABLE_NAME};";
+
+                using (IDbCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    connection.Open();
+
+                    IDataReader reader = command.ExecuteReader();
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                            products.Add(new TodoDto
+                            {
+                                Id = reader.GetInt32(0),
+                                CreatedDate = reader.GetDateTime(1),
+                                DueDate = reader.GetDateTime(2),
+                                Description = reader.GetString(3),
+                                Creator = reader.GetString(4),
+                                Alert = reader.GetBoolean(5),
+                                Extra1 = reader.GetString(6),
+                                Extra2 = reader.GetString(7),
+                                Extra3 = reader.GetString(8),
+                                Extra4 = reader.GetString(9),
+                                Extra5 = reader.GetString(10),
+                            });
+                        }
+                    }
+                    finally
+                    {
+                        reader?.Dispose();
+                    }
+                }
+            }
+            return Ok(products);
         }
 
         [HttpPost]
@@ -31,7 +80,7 @@ namespace Host.Controllers
                 return BadRequest("Product data is required");
             }
 
-            using (SqlConnection connection = new SqlConnection(_handler.GenerateConnectionString()))
+            using (IDbConnection connection = new SqlConnection(CONNECTION_STRING))
             {
                 var insertCommand = "INSERT INTO Products (";
                 var valuesClause = "VALUES (";
@@ -39,7 +88,7 @@ namespace Host.Controllers
                 var parameters = new List<SqlParameter>();
                 foreach (PropertyInfo prop in todo.GetType().GetProperties())
                 {
-                    if (prop.GetValue(todo) != null) 
+                    if (prop.GetValue(todo) != null)
                     {
                         insertCommand += $"[{prop.Name}], ";
                         valuesClause += $"@{prop.Name}, ";
@@ -53,11 +102,10 @@ namespace Host.Controllers
 
                 string query = insertCommand + valuesClause;
 
-                using (SqlCommand command = new SqlCommand(query, connection))
+                connection.Open();
+                using (IDbCommand command = connection.CreateCommand())
                 {
-                    command.Parameters.AddRange(parameters.ToArray());
-
-                    connection.Open();
+                    command.CommandText = query;
                     command.ExecuteNonQuery();
                 }
             }
