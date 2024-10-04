@@ -16,6 +16,7 @@ namespace Dto
             return new DateTime(input.Year, input.Month, input.Day, input.Hour, input.Minute, input.Second);
         }
 
+        public int Id { get => _todo.Id; set => throw new InvalidOperationException(); }
         public DateTime CreatedDate { get => DateWithoutMills(_todo.CreatedDate); set => _todo.CreatedDate = DateWithoutMills(value); }
         public DateTime DueDate { get => DateWithoutMills(_todo.DueDate); set => _todo.DueDate = DateWithoutMills(value); }
         public string Creator { get => _todo.Creator; set => _todo.Creator = value; }

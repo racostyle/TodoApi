@@ -4,6 +4,7 @@ namespace Dto
 {
     public interface ITodo
     {
+        public int Id { get; set; }
         DateTime CreatedDate { get; set; }
         DateTime DueDate { get; set; }
         string Creator { get; set; }
